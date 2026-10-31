@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory Dashboard</title>
+
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#4f46e5;--danger:#dc2626;--warn:#d97706}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1117;--card:#181b24;--text:#e5e7eb;--muted:#9ca3af;--line:#2a2f3c;--accent:#818cf8;--danger:#f87171;--warn:#fbbf24}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 28px}
+h1{font-size:1.4rem;margin:0}
+main{padding:0 28px 40px;max-width:1100px;margin:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card small{color:var(--muted)}.card b{display:block;font-size:1.7rem;margin-top:6px}
+.bar{display:flex;align-items:center;gap:8px;font-size:.85rem;margin:6px 0}
+.bar span.t{height:8px;border-radius:4px;background:var(--accent)}
+button{font:inherit;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff}
+button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+button.del{background:var(--danger)}
+.toolbar{display:flex;gap:10px;margin-bottom:12px}
+input{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:.85rem}
+.low{color:var(--warn);font-weight:600}
+td.actions{display:flex;gap:6px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);padding:22px;width:min(380px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+.err{color:var(--danger);font-size:.85rem;min-height:1.2em;margin-top:8px}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+</style>
+</head>
+
+<body>
+<header><h1>Inventory Dashboard</h1><button id="add">+ Add item</button></header>
+<main>
+  <section class="cards">
+    <div class="card"><small>Total items</small><b id="sItems">0</b></div>
+    <div class="card"><small>Inventory value</small><b id="sValue">$0</b></div>
+    <div class="card"><small>Low stock (≤ 5)</small><b id="sLow">0</b></div>
+    <div class="card"><small>Items by category</small><div id="cats"></div></div>
+  </section>
+  <section class="card">
+    <div class="toolbar"><input id="search" placeholder="Search by name or category…"></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Name</th><th>Category</th><th>Qty</th><th>Price</th><th>Actions</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+</main>
+<dialog id="dlg">
+  <h3 id="dlgTitle" style="margin-top:0">Add item</h3>
+  <input type="hidden" id="id">
+  <label>Name</label><input id="name">
+  <label>Category</label><input id="category">
+  <label>Quantity</label><input id="quantity" type="number" min="0" step="1">
+  <label>Price</label><input id="price" type="number" min="0" step="0.01">
+  <div class="err" id="err"></div>
+  <div class="row"><button class="ghost" id="cancel">Cancel</button><button id="save">Save</button></div>
+</dialog>
+<script>
+const $ = id => document.getElementById(id);
+const money = n => '$' + Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let items = [];
+
+async function api(url, opts) {
+  const r = await fetch(url, opts && {...opts, headers:{'Content-Type':'application/json'}});
+  if (!r.ok) throw new Error((await r.json()).error || 'Request failed');
+  return r.status === 204 ? null : r.json();
+}
+
+async function load() {
+  items = await api('/api/items');
+  const s = await api('/api/stats');
+  $('sItems').textContent = s.items;
+  $('sValue').textContent = money(s.value);
+  $('sLow').textContent = s.lowStock;
+  const max = Math.max(1, ...s.byCategory.map(c => c.count));
+  $('cats').innerHTML = s.byCategory.map(c =>
+    `<div class="bar"><span style="min-width:70px">${esc(c.category)}</span><span class="t" style="width:${c.count/max*100}px"></span>${c.count}</div>`
+  ).join('') || '<small>No data</small>';
+  render();
+}
+
+function render() {
+  const q = $('search').value.toLowerCase();
+  const list = items.filter(i => (i.name + ' ' + i.category).toLowerCase().includes(q));
+  $('rows').innerHTML = list.map(i => `<tr>
+    <td>${esc(i.name)}</td><td>${esc(i.category)}</td>
+    <td class="${i.quantity <= 5 ? 'low' : ''}">${i.quantity}</td><td>${money(i.price)}</td>
+    <td class="actions"><button class="ghost" onclick="edit(${i.id})">Edit</button>
+    <button class="del" onclick="remove(${i.id})">Delete</button></td></tr>`).join('')
+    || '<tr><td colspan="5" style="color:var(--muted)">No items yet.</td></tr>';
+}
+
+function openDlg(item) {
+  $('dlgTitle').textContent = item ? 'Edit item' : 'Add item';
+  $('id').value = item?.id || '';
+  ['name','category','quantity','price'].forEach(k => $(k).value = item ? item[k] : '');
+  $('err').textContent = '';
+  $('dlg').showModal();
+}
+const edit = id => openDlg(items.find(i => i.id === id));
+async function remove(id) {
+  if (!confirm('Delete this item?')) return;
+  await api('/api/items/' + id, {method:'DELETE'});
+  load();
+}
+
+$('add').onclick = () => openDlg();
+$('cancel').onclick = () => $('dlg').close();
+$('search').oninput = render;
+$('save').onclick = async () => {
+  const body = JSON.stringify({name:$('name').value, category:$('category').value, quantity:$('quantity').value, price:$('price').value});
+  const id = $('id').value;
+  try {
+    await api(id ? '/api/items/' + id : '/api/items', {method: id ? 'PUT' : 'POST', body});
+    $('dlg').close();
+    load();
+  } catch (e) { $('err').textContent = e.message; }
+};
+load();
+</script>
+</body>
+</html>

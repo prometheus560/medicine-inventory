@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MedStock – Medical-Dental Health Unit</title>
-
 <style>
 :root{
   --bg:#f3f6fb;--surface:#fff;--text:#0f1f33;--muted:#64748b;--line:#e4eaf2;
@@ -21,8 +20,7 @@ svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke
 /* Sidebar */
 aside{width:250px;background:var(--side);color:var(--side-text);padding:22px 16px;display:flex;flex-direction:column;gap:26px;position:sticky;top:0;height:100vh}
 .brand{display:flex;gap:12px;align-items:center;color:#fff}
-.logo{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center}
-.logo svg{stroke:#fff;stroke-width:2.4}
+img.logo{width:44px;height:44px;border-radius:50%;background:#fff;object-fit:cover;display:block;flex:none}
 .brand b{display:block;font-size:1.05rem;letter-spacing:.2px}.brand small{color:var(--side-text);font-size:.74rem}
 nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:10px;color:var(--side-text);text-decoration:none;margin-bottom:4px}
 nav a.active{background:rgba(255,255,255,.09);color:#fff}
@@ -88,14 +86,13 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
 #toast.show{opacity:1;transform:none}
 @media (max-width:900px){aside{display:none}.grid2{grid-template-columns:1fr}.topbar,main{padding-left:16px;padding-right:16px}}
 </style>
-
 </head>
 <body>
 <aside>
- <div class="brand">
-  <img class="logo" src="mertlogo.jpg" alt="CPSU SCC-MERT logo">
-  <div><b>MedStock</b><small>Medicine Inventory</small></div>
-</div>
+  <div class="brand">
+    <img class="logo" src="mertlogo.jpg" alt="CPSU SCC-MERT logo">
+    <div><b>MedStock</b><small>Medicine Inventory</small></div>
+  </div>
   <nav>
     <a class="active" href="#"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
     <a href="#inventory"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Inventory</a>

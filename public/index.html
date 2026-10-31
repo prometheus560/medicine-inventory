@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedStock – Medical-Dental Health Unit</title>
+<style>
+:root{
+  --bg:#f3f6fb;--surface:#fff;--text:#0f1f33;--muted:#64748b;--line:#e4eaf2;
+  --brand:#0b63ce;--brand-2:#0ea5b7;--side:#0b1f3a;--side-text:#b8c7dc;
+  --ok:#0f9d6b;--ok-bg:#e3f6ee;--warn:#b86e00;--warn-bg:#fff3dc;--bad:#d1293d;--bad-bg:#fde8eb;--info-bg:#e6f0fd;
+  --shadow:0 1px 2px rgba(15,31,51,.05),0 4px 14px rgba(15,31,51,.05)
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0a121d;--surface:#111c2b;--text:#e8eef6;--muted:#8da1b8;--line:#1f2f44;--brand:#4da3ff;--side:#070e18;
+  --ok:#3ddc9f;--ok-bg:#12372b;--warn:#ffbe55;--warn-bg:#3b2d12;--bad:#ff7b8b;--bad-bg:#40191f;--info-bg:#14304f;--shadow:none}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* Sidebar */
+aside{width:250px;background:var(--side);color:var(--side-text);padding:22px 16px;display:flex;flex-direction:column;gap:26px;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:12px;align-items:center;color:#fff}
+img.logo{width:44px;height:44px;border-radius:50%;background:#fff;object-fit:cover;display:block;flex:none}
+.brand b{display:block;font-size:1.05rem;letter-spacing:.2px}.brand small{color:var(--side-text);font-size:.74rem}
+nav a{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:10px;color:var(--side-text);text-decoration:none;margin-bottom:4px}
+nav a.active{background:rgba(255,255,255,.09);color:#fff}
+.side-foot{margin-top:auto;font-size:.78rem;line-height:1.5;padding:12px;border-radius:10px;background:rgba(255,255,255,.05)}
+/* Main */
+.content{flex:1;min-width:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:22px 32px 6px;flex-wrap:wrap}
+.topbar h1{margin:0;font-size:1.45rem;letter-spacing:-.3px}.topbar p{margin:3px 0 0;color:var(--muted)}
+main{padding:16px 32px 40px;max-width:1300px}
+.btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(11,99,206,.3)}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
+.btn.sm{padding:6px 10px;font-weight:500;font-size:.82rem}
+.btn.sm.danger{color:var(--bad);border-color:transparent}.btn.sm.danger:hover{background:var(--bad-bg)}
+.btn.sm svg{width:15px;height:15px}
+/* Stat cards */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin:12px 0 18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.stat{padding:18px;display:flex;gap:14px;align-items:center}
+.ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center}
+.ico.blue{background:var(--info-bg);color:var(--brand)}.ico.green{background:var(--ok-bg);color:var(--ok)}
+.ico.amber{background:var(--warn-bg);color:var(--warn)}.ico.red{background:var(--bad-bg);color:var(--bad)}
+.stat small{color:var(--muted);display:block}.stat b{font-size:1.6rem;letter-spacing:-.5px}
+/* Insights */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.panel h3{margin:0;font-size:1rem}.panel-head{padding:18px 20px 0}.panel-body{padding:14px 20px 18px}
+.bar{display:grid;grid-template-columns:110px 1fr 28px;gap:10px;align-items:center;margin:11px 0;font-size:.88rem}
+.track{height:8px;background:var(--bg);border-radius:99px;overflow:hidden}
+.fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand-2))}
+.alert{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.alert:last-child{border:0}.alert small{color:var(--muted);display:block}
+.empty{color:var(--muted);padding:14px 0}
+/* Table */
+.tools{display:flex;gap:10px;padding:18px 20px;flex-wrap:wrap;align-items:center}
+.tools h3{margin-right:auto}
+.search{position:relative;min-width:240px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);width:17px;height:17px}
+.search input{padding-left:36px}
+input,select{font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;outline:none}
+input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(11,99,206,.15)}
+.tools select{width:auto}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg);color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.6px;font-weight:600;text-align:left;padding:11px 20px}
+td{padding:14px 20px;border-top:1px solid var(--line);white-space:nowrap}
+tbody tr:hover{background:var(--bg)}
+.name{font-weight:600}.sub{color:var(--muted);font-size:.8rem}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:.78rem;font-weight:600}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ok{color:var(--ok);background:var(--ok-bg)}.pill.low,.pill.soon{color:var(--warn);background:var(--warn-bg)}.pill.exp{color:var(--bad);background:var(--bad-bg)}
+td.actions{display:flex;gap:4px}
+.foot{padding:12px 20px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
+/* Modal + toast */
+dialog{border:0;border-radius:18px;background:var(--surface);color:var(--text);padding:0;width:min(460px,94vw);box-shadow:0 24px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(7,14,24,.55);backdrop-filter:blur(3px)}
+.dlg-head{padding:20px 24px;border-bottom:1px solid var(--line)}.dlg-head h3{margin:0;font-size:1.1rem}
+.dlg-body{padding:6px 24px 4px}
+label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14px 0 6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.err{color:var(--bad);min-height:1.3em;margin:10px 24px 0;font-size:.85rem}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 24px 20px}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--side);color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none}
+#toast.show{opacity:1;transform:none}
+@media (max-width:900px){aside{display:none}.grid2{grid-template-columns:1fr}.topbar,main{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand">
+    <img class="logo" src="mertlogo.jpg" alt="CPSU SCC-MERT logo">
+    <div><b>MedStock</b><small>Medicine Inventory</small></div>
+  </div>
+  <nav>
+    <a class="active" href="#"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+    <a href="#inventory"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Inventory</a>
+  </nav>
+  <div class="side-foot"><b style="color:#fff">Medical-Dental Health Unit</b><br>San Carlos Campus</div>
+</aside>
+
+<div class="content">
+  <div class="topbar">
+    <div><h1>Dashboard</h1><p>Monitor stock levels and medicine expiry at a glance.</p></div>
+    <button class="btn" id="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add medicine</button>
+  </div>
+  <main>
+    <section class="stats">
+      <div class="panel stat"><div class="ico blue"><svg viewBox="0 0 24 24"><path d="M10.5 20.5l-7-7a4.9 4.9 0 017-7l7 7a4.9 4.9 0 01-7 7z"/><path d="M8.5 8.5l7 7"/></svg></div><div><small>Medicines</small><b id="sMeds">0</b></div></div>
+      <div class="panel stat"><div class="ico green"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div><div><small>Units in stock</small><b id="sUnits">0</b></div></div>
+      <div class="panel stat"><div class="ico amber"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div><div><small>Low stock</small><b id="sLow">0</b></div></div>
+      <div class="panel stat"><div class="ico amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><small>Expiring in 30 days</small><b id="sSoon">0</b></div></div>
+      <div class="panel stat"><div class="ico red"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div><div><small>Expired</small><b id="sExp">0</b></div></div>
+    </section>
+
+    <section class="grid2">
+      <div class="panel"><div class="panel-head"><h3>Stock by category</h3></div><div class="panel-body" id="cats"></div></div>
+      <div class="panel"><div class="panel-head"><h3>Needs attention</h3></div><div class="panel-body" id="attn"></div></div>
+    </section>
+
+    <section class="panel" id="inventory">
+      <div class="tools">
+        <h3>Medicine inventory</h3>
+        <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="search" placeholder="Search name, category, batch…"></div>
+        <select id="filter">
+          <option value="">All status</option><option value="ok">In stock</option><option value="low">Low stock</option><option value="soon">Expiring soon</option><option value="exp">Expired</option>
+        </select>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Medicine</th><th>Category</th><th>Quantity</th><th>Batch</th><th>Expiry</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+      <div class="foot" id="count"></div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <div class="dlg-head"><h3 id="dlgTitle">Add medicine</h3></div>
+  <div class="dlg-body">
+    <input type="hidden" id="id">
+    <label>Medicine name</label><input id="name" placeholder="e.g. Paracetamol 500mg">
+    <label>Category</label><input id="category" list="cats-list" placeholder="e.g. Analgesic">
+    <datalist id="cats-list"><option>Analgesic</option><option>Antibiotic</option><option>Antihistamine</option><option>Antacid</option><option>Vitamins</option><option>Dental</option><option>First aid</option></datalist>
+    <div class="two">
+      <div><label>Quantity</label><input id="quantity" type="number" min="0" step="1"></div>
+      <div><label>Unit</label><input id="unit" list="unit-list" placeholder="tablet"></div>
+    </div>
+    <datalist id="unit-list"><option>tablet</option><option>capsule</option><option>bottle</option><option>box</option><option>sachet</option><option>tube</option></datalist>
+    <div class="two">
+      <div><label>Batch no. (optional)</label><input id="batch_no"></div>
+      <div><label>Expiry date</label><input id="expiry_date" type="date"></div>
+    </div>
+  </div>
+  <div class="err" id="err"></div>
+  <div class="dlg-foot"><button class="btn ghost" id="cancel">Cancel</button><button class="btn" id="save">Save medicine</button></div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {year:'numeric', month:'short', day:'numeric'});
+let meds = [];
+
+const toast = msg => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); };
+
+async function api(url, opts) {
+  const r = await fetch(url, opts && {...opts, headers:{'Content-Type':'application/json'}});
+  if (!r.ok) throw new Error((await r.json()).error || 'Request failed');
+  return r.status === 204 ? null : r.json();
+}
+
+function status(m) {
+  const today = new Date().toISOString().slice(0,10);
+  const soon = new Date(Date.now() + 30*864e5).toISOString().slice(0,10);
+  if (m.expiry_date < today) return ['exp', 'Expired'];
+  if (m.expiry_date <= soon) return ['soon', 'Expiring soon'];
+  if (m.quantity <= 10) return ['low', 'Low stock'];
+  return ['ok', 'In stock'];
+}
+
+async function load() {
+  meds = await api('/api/medicines');
+  const s = await api('/api/stats');
+  $('sMeds').textContent = s.medicines; $('sUnits').textContent = s.units;
+  $('sLow').textContent = s.lowStock; $('sSoon').textContent = s.expiringSoon; $('sExp').textContent = s.expired;
+  const max = Math.max(1, ...s.byCategory.map(c => c.count));
+  $('cats').innerHTML = s.byCategory.map(c =>
+    `<div class="bar"><span>${esc(c.category)}</span><div class="track"><div class="fill" style="width:${c.count/max*100}%"></div></div><b>${c.count}</b></div>`
+  ).join('') || '<div class="empty">No medicines yet.</div>';
+  const rank = {exp:0, soon:1, low:2};
+  const alerts = meds.filter(m => status(m)[0] !== 'ok').sort((a,b) => rank[status(a)[0]] - rank[status(b)[0]]).slice(0,5);
+  $('attn').innerHTML = alerts.map(m => { const [k,l] = status(m);
+    return `<div class="alert"><div><b>${esc(m.name)}</b><small>${m.quantity} ${esc(m.unit)} · exp ${fmt(m.expiry_date)}</small></div><span class="pill ${k}">${l}</span></div>`; }
+  ).join('') || '<div class="empty">All clear — nothing needs attention.</div>';
+  render();
+}
+
+function render() {
+  const q = $('search').value.toLowerCase(), f = $('filter').value;
+  const list = meds.filter(m => (m.name+' '+m.category+' '+m.batch_no).toLowerCase().includes(q)
+    && (!f || (f === 'low' ? m.quantity <= 10 : status(m)[0] === f)));
+  $('rows').innerHTML = list.map(m => { const [k, l] = status(m); return `<tr>
+    <td><div class="name">${esc(m.name)}</div></td><td>${esc(m.category)}</td>
+    <td><b>${m.quantity}</b> <span class="sub">${esc(m.unit)}</span></td>
+    <td class="sub">${esc(m.batch_no) || '—'}</td><td>${fmt(m.expiry_date)}</td>
+    <td><span class="pill ${k}">${l}</span></td>
+    <td class="actions"><button class="btn sm ghost" onclick="edit(${m.id})">Edit</button>
+    <button class="btn sm danger ghost" onclick="remove(${m.id})">Delete</button></td></tr>`; }).join('')
+    || '<tr><td colspan="7" class="empty" style="text-align:center;padding:30px">No medicines found.</td></tr>';
+  $('count').textContent = `Showing ${list.length} of ${meds.length} medicines`;
+}
+
+const fields = ['name','category','quantity','unit','batch_no','expiry_date'];
+function openDlg(m) {
+  $('dlgTitle').textContent = m ? 'Edit medicine' : 'Add medicine';
+  $('id').value = m?.id || '';
+  fields.forEach(k => $(k).value = m ? m[k] : '');
+  $('err').textContent = '';
+  $('dlg').showModal();
+}
+const edit = id => openDlg(meds.find(m => m.id === id));
+async function remove(id) {
+  if (!confirm('Delete this medicine?')) return;
+  await api('/api/medicines/' + id, {method:'DELETE'});
+  toast('Medicine deleted'); load();
+}
+
+$('add').onclick = () => openDlg();
+$('cancel').onclick = () => $('dlg').close();
+$('search').oninput = render; $('filter').onchange = render;
+$('save').onclick = async () => {
+  const body = JSON.stringify(Object.fromEntries(fields.map(k => [k, $(k).value])));
+  const id = $('id').value;
+  try {
+    await api(id ? '/api/medicines/' + id : '/api/medicines', {method: id ? 'PUT' : 'POST', body});
+    $('dlg').close(); toast(id ? 'Medicine updated' : 'Medicine added'); load();
+  } catch (e) { $('err').textContent = e.message; }
+};
+load();
+</script>
+</body>
+</html>

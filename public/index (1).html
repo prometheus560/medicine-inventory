@@ -105,7 +105,7 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
 
 <div class="content">
   <div class="topbar">
-    <div><h1>Dashboard</h1><p>Monitor stock levels and medicine expiry at a glance.</p></div>
+    <div><h1>Dashboard</h1><p>Monitor stock levels and medicine expiry at a glance. <b>Demo: data is saved in this browser.</b></p></div>
     <button class="btn" id="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add medicine</button>
   </div>
   <main>
@@ -169,10 +169,59 @@ let meds = [];
 
 const toast = msg => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); };
 
+const DB_KEY = 'medstock-demo';
+const dayStr = n => new Date(Date.now() + n*864e5).toISOString().slice(0,10);
+function readDB() {
+  let l = null;
+  try { l = JSON.parse(localStorage.getItem(DB_KEY)); } catch (e) {}
+  if (!l) {
+    l = [
+      {id:1,name:'Paracetamol 500mg',category:'Analgesic',unit:'tablet',quantity:200,batch_no:'PCM-101',expiry_date:dayStr(400)},
+      {id:2,name:'Amoxicillin 500mg',category:'Antibiotic',unit:'capsule',quantity:6,batch_no:'AMX-220',expiry_date:dayStr(200)},
+      {id:3,name:'Cetirizine 10mg',category:'Antihistamine',unit:'tablet',quantity:80,batch_no:'CTZ-045',expiry_date:dayStr(15)},
+      {id:4,name:'Ibuprofen 200mg',category:'Analgesic',unit:'tablet',quantity:60,batch_no:'IBU-377',expiry_date:dayStr(-10)},
+      {id:5,name:'Povidone-iodine',category:'First aid',unit:'bottle',quantity:25,batch_no:'PVI-009',expiry_date:dayStr(300)}
+    ];
+    writeDB(l);
+  }
+  return l;
+}
+function writeDB(l) { try { localStorage.setItem(DB_KEY, JSON.stringify(l)); } catch (e) {} }
+function validate(b) {
+  const name = String(b.name||'').trim(), category = String(b.category||'').trim(), unit = String(b.unit||'').trim();
+  const batch_no = String(b.batch_no||'').trim(), expiry_date = String(b.expiry_date||'').trim(), quantity = Number(b.quantity);
+  if (!name || !category || !unit) throw new Error('Name, category and unit are required.');
+  if (!Number.isInteger(quantity) || quantity < 0) throw new Error('Quantity must be a whole number ≥ 0.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(expiry_date)) throw new Error('Expiry date is required.');
+  return { name, category, unit, quantity, batch_no, expiry_date };
+}
 async function api(url, opts) {
-  const r = await fetch(url, opts && {...opts, headers:{'Content-Type':'application/json'}});
-  if (!r.ok) throw new Error((await r.json()).error || 'Request failed');
-  return r.status === 204 ? null : r.json();
+  const method = (opts && opts.method) || 'GET';
+  let list = readDB();
+  if (url === '/api/stats') {
+    const today = dayStr(0), soon = dayStr(30), by = {};
+    list.forEach(m => by[m.category] = (by[m.category]||0) + 1);
+    return {
+      medicines: list.length,
+      units: list.reduce((a,m) => a + m.quantity, 0),
+      lowStock: list.filter(m => m.quantity <= 10).length,
+      expired: list.filter(m => m.expiry_date < today).length,
+      expiringSoon: list.filter(m => m.expiry_date >= today && m.expiry_date <= soon).length,
+      byCategory: Object.entries(by).map(([category,count]) => ({category,count})).sort((a,b) => b.count - a.count)
+    };
+  }
+  const id = Number(url.split('/')[3]);
+  if (method === 'GET') return list.slice().sort((a,b) => a.expiry_date.localeCompare(b.expiry_date));
+  if (method === 'POST') {
+    const m = { id: Math.max(0, ...list.map(x => x.id)) + 1, ...validate(JSON.parse(opts.body)) };
+    list.push(m); writeDB(list); return m;
+  }
+  if (method === 'PUT') {
+    const v = validate(JSON.parse(opts.body)), i = list.findIndex(x => x.id === id);
+    if (i < 0) throw new Error('Medicine not found.');
+    list[i] = { id, ...v }; writeDB(list); return list[i];
+  }
+  if (method === 'DELETE') { writeDB(list.filter(x => x.id !== id)); return null; }
 }
 
 function status(m) {

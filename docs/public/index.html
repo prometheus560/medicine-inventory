@@ -85,6 +85,17 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
 #toast{position:fixed;bottom:24px;right:24px;background:var(--side);color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none}
 #toast.show{opacity:1;transform:none}
 @media (max-width:900px){aside{display:none}.grid2{grid-template-columns:1fr}.topbar,main{padding-left:16px;padding-right:16px}}
+th.sortable{cursor:pointer;user-select:none}th.sortable:hover{color:var(--text)}
+th.sortable::after{content:attr(data-arrow)}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pager .btns{display:flex;gap:8px;align-items:center}
+.btn:disabled{opacity:.4;cursor:default}
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
+a.btn{text-decoration:none}
+.printhead{display:none}
+@media print{aside,.topbar,.tools,.noprint,#toast,.grid2,#history,.stats{display:none!important}
+body{display:block;background:#fff;color:#000}.panel{box-shadow:none;border:0}.printhead{display:block;padding:0 0 12px}
+.printhead h2{margin:0}.printhead p{margin:4px 0 0;color:#555}td,th{padding:6px 8px}}
 </style>
 </head>
 <body>
@@ -96,6 +107,7 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
   <nav>
     <a class="active" href="#"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
     <a href="#inventory"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Inventory</a>
+    <a href="#history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History</a>
   </nav>
   <div class="side-foot"><b style="color:#fff">Medical-Dental Health Unit</b><br>San Carlos Campus</div>
 </aside>
@@ -103,9 +115,10 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
 <div class="content">
   <div class="topbar">
     <div><h1>Dashboard</h1><p>Monitor stock levels and medicine expiry at a glance.</p></div>
-    <button class="btn" id="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add medicine</button>
+    <div class="hdr-actions"><button class="btn ghost" id="print">Print report</button><a class="btn ghost" href="/api/export.csv">Export CSV</a><button class="btn" id="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add medicine</button></div>
   </div>
   <main>
+    <div class="printhead"><h2>Medical-Dental Health Unit – San Carlos Campus</h2><p>Medicine Inventory Report · <span id="pdate"></span></p></div>
     <section class="stats">
       <div class="panel stat"><div class="ico blue"><svg viewBox="0 0 24 24"><path d="M10.5 20.5l-7-7a4.9 4.9 0 017-7l7 7a4.9 4.9 0 01-7 7z"/><path d="M8.5 8.5l7 7"/></svg></div><div><small>Medicines</small><b id="sMeds">0</b></div></div>
       <div class="panel stat"><div class="ico green"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div><div><small>Units in stock</small><b id="sUnits">0</b></div></div>
@@ -128,10 +141,17 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
         </select>
       </div>
       <div class="tablewrap"><table>
-        <thead><tr><th>Medicine</th><th>Category</th><th>Quantity</th><th>Batch</th><th>Expiry</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th class="sortable" data-k="name">Medicine</th><th class="sortable" data-k="category">Category</th><th class="sortable" data-k="quantity">Quantity</th><th>Batch</th><th class="sortable" data-k="expiry_date">Expiry</th><th class="sortable" data-k="status">Status</th><th class="noprint"></th></tr></thead>
         <tbody id="rows"></tbody>
       </table></div>
-      <div class="foot" id="count"></div>
+      <div class="foot pager"><span id="count"></span><div class="btns noprint"><button class="btn sm ghost" id="prev">Prev</button><span id="pg" class="sub"></span><button class="btn sm ghost" id="next">Next</button></div></div>
+    </section>
+  <section class="panel" id="history" style="margin-top:18px">
+      <div class="tools"><h3>Stock history</h3><span class="sub">Latest 100 movements</span></div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Date</th><th>Medicine</th><th>Type</th><th>Qty</th><th>Note</th></tr></thead>
+        <tbody id="hrows"></tbody>
+      </table></div>
     </section>
   </main>
 </div>
@@ -152,9 +172,25 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
       <div><label>Batch no. (optional)</label><input id="batch_no"></div>
       <div><label>Expiry date</label><input id="expiry_date" type="date"></div>
     </div>
+    <div class="two">
+      <div><label>Reorder level</label><input id="reorder_level" type="number" min="0" step="1"></div>
+      <div><label>Supplier (optional)</label><input id="supplier"></div>
+    </div>
   </div>
+  <div class="dlg-body" style="padding-top:0"><label>Remarks (optional)</label><input id="remarks"></div>
   <div class="err" id="err"></div>
   <div class="dlg-foot"><button class="btn ghost" id="cancel">Cancel</button><button class="btn" id="save">Save medicine</button></div>
+</dialog>
+<dialog id="sdlg">
+  <div class="dlg-head"><h3 id="sTitle">Update stock</h3></div>
+  <div class="dlg-body">
+    <input type="hidden" id="sid">
+    <label>Action</label><select id="stype" style="width:100%"><option value="OUT">Dispense / use (stock out)</option><option value="IN">Receive (stock in)</option></select>
+    <label>Quantity</label><input id="sqty" type="number" min="1" step="1">
+    <label>Note (patient, purpose, supplier…)</label><input id="snote">
+  </div>
+  <div class="err" id="serr"></div>
+  <div class="dlg-foot"><button class="btn ghost" id="scancel">Cancel</button><button class="btn" id="ssave">Save</button></div>
 </dialog>
 <div id="toast"></div>
 
@@ -162,7 +198,8 @@ label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:14
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, {year:'numeric', month:'short', day:'numeric'});
-let meds = [];
+let meds = [], hist = [], sortK = "expiry_date", sortDir = 1, page = 1, printAll = false;
+const PER = 10;
 
 const toast = msg => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); };
 
@@ -177,12 +214,13 @@ function status(m) {
   const soon = new Date(Date.now() + 30*864e5).toISOString().slice(0,10);
   if (m.expiry_date < today) return ['exp', 'Expired'];
   if (m.expiry_date <= soon) return ['soon', 'Expiring soon'];
-  if (m.quantity <= 10) return ['low', 'Low stock'];
+  if (m.quantity <= (m.reorder_level ?? 10)) return ['low', 'Low stock'];
   return ['ok', 'In stock'];
 }
 
 async function load() {
   meds = await api('/api/medicines');
+  hist = await api('/api/transactions');
   const s = await api('/api/stats');
   $('sMeds').textContent = s.medicines; $('sUnits').textContent = s.units;
   $('sLow').textContent = s.lowStock; $('sSoon').textContent = s.expiringSoon; $('sExp').textContent = s.expired;
@@ -198,26 +236,47 @@ async function load() {
   render();
 }
 
-function render() {
-  const q = $('search').value.toLowerCase(), f = $('filter').value;
-  const list = meds.filter(m => (m.name+' '+m.category+' '+m.batch_no).toLowerCase().includes(q)
-    && (!f || (f === 'low' ? m.quantity <= 10 : status(m)[0] === f)));
-  $('rows').innerHTML = list.map(m => { const [k, l] = status(m); return `<tr>
-    <td><div class="name">${esc(m.name)}</div></td><td>${esc(m.category)}</td>
-    <td><b>${m.quantity}</b> <span class="sub">${esc(m.unit)}</span></td>
-    <td class="sub">${esc(m.batch_no) || '—'}</td><td>${fmt(m.expiry_date)}</td>
-    <td><span class="pill ${k}">${l}</span></td>
-    <td class="actions"><button class="btn sm ghost" onclick="edit(${m.id})">Edit</button>
-    <button class="btn sm danger ghost" onclick="remove(${m.id})">Delete</button></td></tr>`; }).join('')
-    || '<tr><td colspan="7" class="empty" style="text-align:center;padding:30px">No medicines found.</td></tr>';
-  $('count').textContent = `Showing ${list.length} of ${meds.length} medicines`;
+function renderHist() {
+  $('hrows').innerHTML = hist.map(t => `<tr>
+    <td class="sub">${new Date(t.created_at.replace(' ', 'T') + 'Z').toLocaleString()}</td>
+    <td>${esc(t.medicine_name)}</td>
+    <td><span class="pill ${t.type === 'IN' ? 'ok' : 'exp'}">${t.type === 'IN' ? 'Stock in' : 'Stock out'}</span></td>
+    <td><b>${t.type === 'IN' ? '+' : '−'}${t.quantity}</b></td><td class="sub">${esc(t.note || '—')}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="empty" style="text-align:center;padding:24px">No stock movements yet.</td></tr>';
 }
 
-const fields = ['name','category','quantity','unit','batch_no','expiry_date'];
+function render() {
+  const q = $('search').value.toLowerCase(), f = $('filter').value;
+  const list = meds.filter(m => (m.name+' '+m.category+' '+m.batch_no+' '+(m.supplier||'')).toLowerCase().includes(q)
+    && (!f || (f === 'low' ? m.quantity <= (m.reorder_level ?? 10) : status(m)[0] === f)));
+  const val = m => sortK === 'status' ? status(m)[1] : m[sortK];
+  list.sort((a, b) => { const x = val(a), y = val(b);
+    return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * sortDir; });
+  const per = printAll ? 1e9 : PER, pages = Math.max(1, Math.ceil(list.length / per));
+  page = Math.min(page, pages);
+  const rows = list.slice((page - 1) * per, page * per);
+  document.querySelectorAll('th.sortable').forEach(th => th.dataset.arrow = th.dataset.k === sortK ? (sortDir > 0 ? ' ▲' : ' ▼') : '');
+  $('rows').innerHTML = rows.map(m => { const [k, l] = status(m); return `<tr>
+    <td title="${esc(m.remarks || '')}"><div class="name">${esc(m.name)}</div>${m.supplier ? `<div class="sub">${esc(m.supplier)}</div>` : ''}</td>
+    <td>${esc(m.category)}</td>
+    <td><b>${m.quantity}</b> <span class="sub">${esc(m.unit)} · reorder ≤${m.reorder_level ?? 10}</span></td>
+    <td class="sub">${esc(m.batch_no) || '—'}</td><td>${fmt(m.expiry_date)}</td>
+    <td><span class="pill ${k}">${l}</span></td>
+    <td class="actions noprint"><button class="btn sm ghost" onclick="stock(${m.id})">Stock</button>
+    <button class="btn sm ghost" onclick="edit(${m.id})">Edit</button>
+    <button class="btn sm danger ghost" onclick="remove(${m.id})">Delete</button></td></tr>`; }).join('')
+    || '<tr><td colspan="7" class="empty" style="text-align:center;padding:30px">No medicines found.</td></tr>';
+  $('count').textContent = `Showing ${rows.length} of ${list.length} medicines`;
+  $('pg').textContent = `${page} / ${pages}`;
+  $('prev').disabled = page <= 1; $('next').disabled = page >= pages;
+  renderHist();
+}
+
+const fields = ['name','category','quantity','unit','batch_no','expiry_date','reorder_level','supplier','remarks'];
 function openDlg(m) {
   $('dlgTitle').textContent = m ? 'Edit medicine' : 'Add medicine';
   $('id').value = m?.id || '';
-  fields.forEach(k => $(k).value = m ? m[k] : '');
+  fields.forEach(k => $(k).value = m ? (m[k] ?? '') : (k === 'reorder_level' ? 10 : ''));
   $('err').textContent = '';
   $('dlg').showModal();
 }
@@ -229,8 +288,27 @@ async function remove(id) {
 }
 
 $('add').onclick = () => openDlg();
+$('pdate').textContent = new Date().toLocaleDateString();
+$('print').onclick = () => { printAll = true; render(); window.print(); printAll = false; render(); };
+document.querySelectorAll('th.sortable').forEach(th => th.onclick = () => {
+  sortDir = sortK === th.dataset.k ? -sortDir : 1; sortK = th.dataset.k; page = 1; render(); });
+$('prev').onclick = () => { page--; render(); };
+$('next').onclick = () => { page++; render(); };
+function stock(id) {
+  const m = meds.find(x => x.id === id);
+  $('sid').value = id; $('sTitle').textContent = `Update stock – ${m.name} (now ${m.quantity} ${m.unit})`;
+  $('stype').value = 'OUT'; $('sqty').value = ''; $('snote').value = ''; $('serr').textContent = '';
+  $('sdlg').showModal();
+}
+$('scancel').onclick = () => $('sdlg').close();
+$('ssave').onclick = async () => {
+  try {
+    await api('/api/medicines/' + $('sid').value + '/stock', {method:'POST', body: JSON.stringify({type:$('stype').value, quantity:$('sqty').value, note:$('snote').value})});
+    $('sdlg').close(); toast('Stock updated'); load();
+  } catch (e) { $('serr').textContent = e.message; }
+};
 $('cancel').onclick = () => $('dlg').close();
-$('search').oninput = render; $('filter').onchange = render;
+$('search').oninput = () => { page = 1; render(); }; $('filter').onchange = () => { page = 1; render(); };
 $('save').onclick = async () => {
   const body = JSON.stringify(Object.fromEntries(fields.map(k => [k, $(k).value])));
   const id = $('id').value;

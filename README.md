@@ -1,4 +1,4 @@
-# Medicine Inventory – Medical-Dental Health Unit (San Carlos Campus)
+﻿# Medicine Inventory â€“ Medical-Dental Health Unit (San Carlos Campus)
 
 Dashboard with full CRUD. **Frontend:** React + Vite + Tailwind CSS. **Backend:** Express.js + SQLite (`node:sqlite`, Node 22.5+).
 
@@ -6,7 +6,7 @@ Dashboard with full CRUD. **Frontend:** React + Vite + Tailwind CSS. **Backend:*
 - Add, edit, delete medicines (name, category, unit, quantity, batch, expiry, reorder level, supplier, remarks)
 - Stock in / stock out (dispense) with a stock history log
 - Sortable columns, search, status filter, pagination
-- Export to CSV and print-ready inventory report
+- Export to Excel (formatted .xlsx) and print-ready inventory report
 - Dashboard cards, stock-by-category chart, "Needs attention" panel
 
 ## Run

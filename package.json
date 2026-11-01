@@ -1,8 +1,14 @@
 {
   "name": "medicine-inventory",
-  "version": "1.0.0",
-  "description": "Medicine inventory dashboard (Express.js + SQLite) for the Medical-Dental Health Unit",
+  "version": "2.0.0",
+  "description": "Medicine inventory dashboard: React + Tailwind frontend, Express.js + SQLite backend",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm --prefix client install && npm --prefix client run build",
+    "postinstall": "npm run build",
+    "dev": "npm --prefix client run dev"
+  },
+  "engines": { "node": ">=22.5.0" },
   "dependencies": { "express": "^4.21.0" }
 }

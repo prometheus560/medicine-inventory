@@ -31,7 +31,9 @@ db.exec(`CREATE TABLE IF NOT EXISTS transactions (
 )`);
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+const fs = require('fs');
+const dist = path.join(__dirname, 'client', 'dist');
+app.use(express.static(fs.existsSync(dist) ? dist : path.join(__dirname, 'public')));
 
 const get = id => db.prepare('SELECT * FROM medicines WHERE id = ?').get(id);
 const log = (m, type, qty, note) => db.prepare(

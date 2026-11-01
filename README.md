@@ -1,21 +1,26 @@
-﻿# Medicine Inventory
+# Medicine Inventory – Medical-Dental Health Unit (San Carlos Campus)
 
-Medicine inventory dashboard for the **Medical-Dental Health Unit, San Carlos Campus**, built with **Express.js** and **SQLite** with full CRUD.
-
-**Live demo (static, data saved in your browser):** https://prometheus560.github.io/medicine-inventory/
+Dashboard with full CRUD. **Frontend:** React + Vite + Tailwind CSS. **Backend:** Express.js + SQLite (`node:sqlite`, Node 22.5+).
 
 ## Features
-- Add, view, edit, and delete medicines (name, category, unit, quantity, batch number, expiry date)
-- Dashboard cards: total medicines, units in stock, low stock, expiring within 30 days, expired
-- Stock-by-category chart and a "Needs attention" panel
-- Search and status filter with color-coded status pills
+- Add, edit, delete medicines (name, category, unit, quantity, batch, expiry, reorder level, supplier, remarks)
+- Stock in / stock out (dispense) with a stock history log
+- Sortable columns, search, status filter, pagination
+- Export to CSV and print-ready inventory report
+- Dashboard cards, stock-by-category chart, "Needs attention" panel
 
-## Run locally
+## Run
 ```bash
-npm install
-npm start
+npm install     # installs the server and builds the React app
+npm start       # http://localhost:3000
 ```
-Open http://localhost:3000. The SQLite database (`medicines.db`) is created automatically.
+For frontend development: run `npm start` in one terminal and `npm run dev` in another (Vite on http://localhost:5173).
+
+## Project structure
+```
+server.js      Express API + SQLite
+client/        React + Tailwind app (built into client/dist)
+```
 
 ## API
 | Method | Endpoint | Description |
@@ -25,6 +30,6 @@ Open http://localhost:3000. The SQLite database (`medicines.db`) is created auto
 | POST | /api/medicines | Create a medicine |
 | PUT | /api/medicines/:id | Update a medicine |
 | DELETE | /api/medicines/:id | Delete a medicine |
-
-## Tech
-Node.js, Express.js, SQLite (`node:sqlite`), vanilla HTML/CSS/JS.
+| POST | /api/medicines/:id/stock | Stock in/out `{type:"IN"|"OUT", quantity, note}` |
+| GET | /api/transactions | Latest 100 stock movements |
+| GET | /api/export.csv | Download inventory as CSV |

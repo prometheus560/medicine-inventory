@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import Dashboard from './Dashboard.jsx';
 import { api } from './api.js';
 
 const send = (method, body) => ({ method, body: JSON.stringify(body) });
@@ -165,18 +166,18 @@ export default function App() {
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-sm text-slate-900">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-6 bg-[#0b1f3a] p-5 text-slate-300 lg:flex print:hidden">
+    <div className="flex min-h-screen bg-[#f3f7fa] text-sm text-slate-900">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 bg-gradient-to-b from-[#062c43] to-[#0b4f6c] p-5 text-cyan-100/80 lg:flex print:hidden">
         <div className="flex items-center gap-3 text-white">
-          <img src={import.meta.env.BASE_URL + 'mertlogo.jpg'} alt="CPSU SCC-MERT" className="h-11 w-11 rounded-full bg-white object-cover" />
-          <div><b className="block text-base">MedStock</b><small className="text-slate-400">Medicine Inventory</small></div>
+          <img src={import.meta.env.BASE_URL + 'mertlogo.jpg'} alt="CPSU SCC-MERT" className="h-12 w-12 rounded-full bg-white object-cover ring-2 ring-white/30" />
+          <div><b className="block text-base tracking-wide">MedStock</b><small className="text-cyan-200/70">Clinic Medicine Inventory</small></div>
         </div>
         <nav className="space-y-1">
-          <a href="#top" className="block rounded-lg bg-white/10 px-3 py-2.5 text-white">Dashboard</a>
-          <a href="#inventory" className="block rounded-lg px-3 py-2.5 hover:bg-white/5">Inventory</a>
-          <a href="#history" className="block rounded-lg px-3 py-2.5 hover:bg-white/5">History</a>
+          {[['#top', 'Dashboard'], ['#inventory', 'Inventory'], ['#history', 'Stock history']].map(([h, l], i) => (
+            <a key={h} href={h} className={'block rounded-xl px-3 py-2.5 ' + (i === 0 ? 'bg-white/15 text-white' : 'hover:bg-white/10')}>{l}</a>
+          ))}
         </nav>
-        <div className="mt-auto rounded-lg bg-white/5 p-3 text-xs leading-relaxed">
+        <div className="mt-auto rounded-xl bg-white/10 p-3 text-xs leading-relaxed">
           <b className="text-white">Medical-Dental Health Unit</b><br />San Carlos Campus
         </div>
       </aside>
@@ -200,37 +201,7 @@ export default function App() {
             <p className="text-slate-600">Medicine Inventory Report · {new Date().toLocaleDateString()}</p>
           </div>
 
-          <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5 print:hidden">
-            <Stat label="Medicines" value={stats?.medicines ?? 0} tone="text-blue-600" />
-            <Stat label="Units in stock" value={stats?.units ?? 0} tone="text-emerald-600" />
-            <Stat label="Low stock" value={stats?.lowStock ?? 0} tone="text-amber-600" />
-            <Stat label="Expiring in 30 days" value={stats?.expiringSoon ?? 0} tone="text-amber-600" />
-            <Stat label="Expired" value={stats?.expired ?? 0} tone="text-rose-600" />
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-2 print:hidden">
-            <div className={`${card} p-5`}>
-              <h3 className="font-bold">Stock by category</h3>
-              {cats.map(c => (
-                <div key={c.category} className="mt-3 grid grid-cols-[110px_1fr_24px] items-center gap-3">
-                  <span>{c.category}</span>
-                  <div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500" style={{ width: `${(c.count / max) * 100}%` }} /></div>
-                  <b>{c.count}</b>
-                </div>
-              ))}
-              {!cats.length && <p className="mt-3 text-slate-500">No medicines yet.</p>}
-            </div>
-            <div className={`${card} p-5`}>
-              <h3 className="font-bold">Needs attention</h3>
-              {alerts.map(m => { const [k, l] = status(m); return (
-                <div key={m.id} className="flex items-center justify-between gap-3 border-b border-slate-100 py-2.5 last:border-0">
-                  <div><b>{m.name}</b><div className="text-xs text-slate-500">{m.quantity} {m.unit} · exp {fmt(m.expiry_date)}</div></div>
-                  <Pill k={k}>{l}</Pill>
-                </div>
-              ); })}
-              {!alerts.length && <p className="mt-3 text-slate-500">All clear — nothing needs attention.</p>}
-            </div>
-          </section>
+          <Dashboard meds={meds} hist={hist} stats={stats} status={status} fmt={fmt} onAdd={() => setModal({ type: 'med' })} onStock={m => setModal({ type: 'stock', med: m })} />
 
           <section id="inventory" className={card}>
             <div className="flex flex-wrap items-center gap-3 p-5 print:hidden">

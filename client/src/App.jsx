@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, DEMO, exportCsv } from './api.js';
+import { api, exportCsv } from './api.js';
 
 const send = (method, body) => ({ method, body: JSON.stringify(body) });
 const iso = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
@@ -183,7 +183,7 @@ export default function App() {
         <header id="top" className="flex flex-wrap items-center justify-between gap-3 px-6 pb-2 pt-6 lg:px-8 print:hidden">
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-slate-500">Monitor stock levels and medicine expiry at a glance.{DEMO && <b className="text-blue-600"> Demo: data is saved in this browser.</b>}</p>
+            <p className="text-slate-500">Monitor stock levels and medicine expiry at a glance.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className={ghost} onClick={print}>Print report</button>

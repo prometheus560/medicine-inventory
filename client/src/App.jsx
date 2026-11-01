@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, exportCsv } from './api.js';
+import { api } from './api.js';
 
 const send = (method, body) => ({ method, body: JSON.stringify(body) });
 const iso = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
@@ -135,6 +135,8 @@ export default function App() {
   };
   const print = () => { setPrintAll(true); setTimeout(() => { window.print(); setPrintAll(false); }, 80); };
 
+  const exportXlsx = async () => { const { exportExcel } = await import('./exportExcel.js'); await exportExcel(meds, hist, status); };
+
   const list = useMemo(() => {
     const val = m => (sort.k === 'status' ? status(m)[1] : m[sort.k]);
     return meds
@@ -187,7 +189,7 @@ export default function App() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button className={ghost} onClick={print}>Print report</button>
-            <button className={ghost} onClick={exportCsv}>Export CSV</button>
+            <button className={ghost} onClick={exportXlsx}>Export Excel</button>
             <button className={primary} onClick={() => setModal({ type: 'med' })}>+ Add medicine</button>
           </div>
         </header>

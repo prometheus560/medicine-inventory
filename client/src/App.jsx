@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { api, DEMO, exportCsv } from './api.js';
 
-const api = async (url, opts) => {
-  const r = await fetch(url, opts && { ...opts, headers: { 'Content-Type': 'application/json' } });
-  if (!r.ok) throw new Error((await r.json()).error || 'Request failed');
-  return r.status === 204 ? null : r.json();
-};
 const send = (method, body) => ({ method, body: JSON.stringify(body) });
 const iso = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
@@ -170,7 +166,7 @@ export default function App() {
     <div className="flex min-h-screen bg-slate-100 text-sm text-slate-900">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-6 bg-[#0b1f3a] p-5 text-slate-300 lg:flex print:hidden">
         <div className="flex items-center gap-3 text-white">
-          <img src="/mertlogo.jpg" alt="CPSU SCC-MERT" className="h-11 w-11 rounded-full bg-white object-cover" />
+          <img src={import.meta.env.BASE_URL + 'mertlogo.jpg'} alt="CPSU SCC-MERT" className="h-11 w-11 rounded-full bg-white object-cover" />
           <div><b className="block text-base">MedStock</b><small className="text-slate-400">Medicine Inventory</small></div>
         </div>
         <nav className="space-y-1">
@@ -187,11 +183,11 @@ export default function App() {
         <header id="top" className="flex flex-wrap items-center justify-between gap-3 px-6 pb-2 pt-6 lg:px-8 print:hidden">
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-slate-500">Monitor stock levels and medicine expiry at a glance.</p>
+            <p className="text-slate-500">Monitor stock levels and medicine expiry at a glance.{DEMO && <b className="text-blue-600"> Demo: data is saved in this browser.</b>}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className={ghost} onClick={print}>Print report</button>
-            <a className={ghost} href="/api/export.csv">Export CSV</a>
+            <button className={ghost} onClick={exportCsv}>Export CSV</button>
             <button className={primary} onClick={() => setModal({ type: 'med' })}>+ Add medicine</button>
           </div>
         </header>

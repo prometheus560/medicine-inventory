@@ -15,7 +15,7 @@ export default function Login({ onDone }) {
     setErr('');
     try {
       const r = await api('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-      onDone(r.user);
+      onDone(r);
     } catch (x) { setErr(x.message); }
     setBusy(false);
   };
@@ -38,7 +38,7 @@ export default function Login({ onDone }) {
         </label>
         <p className="mt-3 min-h-5 text-rose-600">{err}</p>
         <button disabled={busy} className="mt-2 w-full rounded-lg bg-cyan-700 py-2.5 font-semibold text-white hover:bg-cyan-800 disabled:opacity-50">
-          {busy ? 'Signing in...' : 'Sign in'}
+          {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
     </div>

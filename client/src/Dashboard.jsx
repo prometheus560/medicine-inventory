@@ -103,7 +103,7 @@ export default function Dashboard({ meds, hist, stats, status, fmt, onAdd, onSto
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={onAdd} className="rounded-lg bg-white px-4 py-2 font-semibold text-cyan-800 shadow hover:bg-cyan-50">+ Add medicine</button>
-          <a href="#inventory" className="rounded-lg border border-white/40 px-4 py-2 font-semibold hover:bg-white/10">View inventory</a>
+          <a href="#/inventory" className="rounded-lg border border-white/40 px-4 py-2 font-semibold hover:bg-white/10">View inventory</a>
         </div>
       </section>
 

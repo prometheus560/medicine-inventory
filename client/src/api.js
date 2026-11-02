@@ -7,7 +7,7 @@ const real = async (url, opts) => {
   return r.status === 204 ? null : r.json();
 };
 
-/* Demo mode (GitHub Pages): same API, data kept in the browser */
+/* ---------- Demo mode (GitHub Pages): same API, data kept in the browser ---------- */
 const KEY = 'medstock-react-demo';
 const iso = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 const now = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -45,7 +45,7 @@ const demo = async (url, opts = {}) => {
   const [, , res, id, sub] = url.split('/');
   const log = (m, type, quantity, note) => d.txs.unshift({ id: Math.max(0, ...d.txs.map(t => t.id)) + 1, medicine_id: m.id, medicine_name: m.name, type, quantity, note, created_at: now() });
 
-  if (res === 'me' || res === 'login') return { user: 'Demo' };
+  if (res === 'me' || res === 'login') return { user: 'Demo', name: 'Demo user' };
   if (res === 'logout') return null;
 
   if (res === 'stats') {

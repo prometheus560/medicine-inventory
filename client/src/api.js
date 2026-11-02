@@ -2,6 +2,7 @@ export const DEMO = import.meta.env.VITE_DEMO === 'true';
 
 const real = async (url, opts) => {
   const r = await fetch(url, opts && { ...opts, headers: { 'Content-Type': 'application/json' } });
+  if (r.status === 401 && !url.endsWith('/login')) window.dispatchEvent(new Event('signed-out'));
   if (!r.ok) throw new Error((await r.json()).error || 'Request failed');
   return r.status === 204 ? null : r.json();
 };
@@ -43,6 +44,9 @@ const demo = async (url, opts = {}) => {
   const method = opts.method || 'GET', d = read(), body = opts.body ? JSON.parse(opts.body) : {};
   const [, , res, id, sub] = url.split('/');
   const log = (m, type, quantity, note) => d.txs.unshift({ id: Math.max(0, ...d.txs.map(t => t.id)) + 1, medicine_id: m.id, medicine_name: m.name, type, quantity, note, created_at: now() });
+
+  if (res === 'me' || res === 'login') return { user: 'Demo' };
+  if (res === 'logout') return null;
 
   if (res === 'stats') {
     const t = iso(0), s = iso(30), by = {};

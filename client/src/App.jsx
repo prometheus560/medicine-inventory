@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Dashboard from './Dashboard.jsx';
+import Login from './Login.jsx';
 import { api } from './api.js';
 
 const send = (method, body) => ({ method, body: JSON.stringify(body) });
@@ -126,7 +127,11 @@ export default function App() {
     const [m, h, s] = await Promise.all([api('/api/medicines'), api('/api/transactions'), api('/api/stats')]);
     setMeds(m); setHist(h); setStats(s);
   };
-  useEffect(() => { load(); }, []);
+  const [user, setUser] = useState(null);
+  useEffect(() => { const out = () => setUser(false); window.addEventListener('signed-out', out); return () => window.removeEventListener('signed-out', out); }, []);
+  useEffect(() => { api('/api/me').then(r => setUser(r.user)).catch(() => setUser(false)); }, []);
+  useEffect(() => { if (user) load(); }, [user]);
+  const signOut = async () => { try { await api('/api/logout', { method: 'POST' }); } finally { setUser(false); } };
 
   const done = msg => { setModal(null); setToast(msg); setTimeout(() => setToast(''), 2200); load(); };
   const remove = async m => {
@@ -165,6 +170,9 @@ export default function App() {
     </th>
   );
 
+  if (user === null) return <div className="grid min-h-screen place-items-center text-slate-500">Loading...</div>;
+  if (user === false) return <Login onDone={setUser} />;
+
   return (
     <div className="flex min-h-screen bg-[#f3f7fa] text-sm text-slate-900">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 bg-gradient-to-b from-[#062c43] to-[#0b4f6c] p-5 text-cyan-100/80 lg:flex print:hidden">
@@ -189,6 +197,7 @@ export default function App() {
             <p className="text-slate-500">Monitor stock levels and medicine expiry at a glance.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button className={ghost} onClick={signOut}>Sign out</button>
             <button className={ghost} onClick={print}>Print report</button>
             <button className={ghost} onClick={exportXlsx}>Export Excel</button>
             <button className={primary} onClick={() => setModal({ type: 'med' })}>+ Add medicine</button>
@@ -252,7 +261,7 @@ export default function App() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Medicine</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Note</th></tr>
+                  <tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Medicine</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Note</th><th className="px-4 py-3">By</th></tr>
                 </thead>
                 <tbody>
                   {hist.map(t => (
@@ -261,10 +270,10 @@ export default function App() {
                       <td className="px-4 py-3">{t.medicine_name}</td>
                       <td className="px-4 py-3"><Pill k={t.type === 'IN' ? 'ok' : 'exp'}>{t.type === 'IN' ? 'Stock in' : 'Stock out'}</Pill></td>
                       <td className="px-4 py-3 font-bold">{t.type === 'IN' ? '+' : '−'}{t.quantity}</td>
-                      <td className="px-4 py-3 text-slate-500">{t.note || '—'}</td>
+                      <td className="px-4 py-3 text-slate-500">{t.note || '—'}</td><td className="px-4 py-3 text-slate-500">{t.performed_by || '-'}</td>
                     </tr>
                   ))}
-                  {!hist.length && <tr><td colSpan="5" className="p-8 text-center text-slate-500">No stock movements yet.</td></tr>}
+                  {!hist.length && <tr><td colSpan="6" className="p-8 text-center text-slate-500">No stock movements yet.</td></tr>}
                 </tbody>
               </table>
             </div>

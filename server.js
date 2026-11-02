@@ -31,14 +31,17 @@ db.exec(`CREATE TABLE IF NOT EXISTS transactions (
 )`);
 
 app.use(express.json());
+require('./auth')(app);
+const tcols = db.prepare('PRAGMA table_info(transactions)').all().map(c => c.name);
+if (!tcols.includes('performed_by')) db.exec("ALTER TABLE transactions ADD COLUMN performed_by TEXT DEFAULT ''");
 const fs = require('fs');
 const dist = path.join(__dirname, 'client', 'dist');
 app.use(express.static(fs.existsSync(dist) ? dist : path.join(__dirname, 'public')));
 
 const get = id => db.prepare('SELECT * FROM medicines WHERE id = ?').get(id);
-const log = (m, type, qty, note) => db.prepare(
-  'INSERT INTO transactions (medicine_id, medicine_name, type, quantity, note) VALUES (?,?,?,?,?)'
-).run(m.id, m.name, type, qty, note);
+const log = (m, type, qty, note, by = "") => db.prepare(
+  'INSERT INTO transactions (medicine_id, medicine_name, type, quantity, note, performed_by) VALUES (?,?,?,?,?,?)'
+).run(m.id, m.name, type, qty, note, by);
 
 function validate(b) {
   const name = String(b.name || '').trim(), category = String(b.category || '').trim(), unit = String(b.unit || '').trim();
@@ -74,7 +77,7 @@ app.post('/api/medicines', (req, res) => {
   const r = db.prepare(`INSERT INTO medicines (name, category, unit, quantity, reorder_level, batch_no, expiry_date, supplier, remarks)
     VALUES (@name,@category,@unit,@quantity,@reorder_level,@batch_no,@expiry_date,@supplier,@remarks)`).run(value);
   const m = get(r.lastInsertRowid);
-  if (m.quantity > 0) log(m, 'IN', m.quantity, 'Initial stock');
+  if (m.quantity > 0) log(m, 'IN', m.quantity, 'Initial stock', req.user);
   res.status(201).json(m);
 });
 
@@ -86,7 +89,7 @@ app.put('/api/medicines/:id', (req, res) => {
   db.prepare(`UPDATE medicines SET name=@name, category=@category, unit=@unit, quantity=@quantity, reorder_level=@reorder_level,
     batch_no=@batch_no, expiry_date=@expiry_date, supplier=@supplier, remarks=@remarks WHERE id=@id`).run({ ...value, id });
   const diff = value.quantity - old.quantity;
-  if (diff !== 0) log({ id, name: value.name }, diff > 0 ? 'IN' : 'OUT', Math.abs(diff), 'Manual edit');
+  if (diff !== 0) log({ id, name: value.name }, diff > 0 ? 'IN' : 'OUT', Math.abs(diff), 'Manual edit', req.user);
   res.json(get(id));
 });
 
@@ -102,7 +105,7 @@ app.post('/api/medicines/:id/stock', (req, res) => {
   db.exec('BEGIN');
   try {
     db.prepare('UPDATE medicines SET quantity = ? WHERE id = ?').run(type === 'IN' ? m.quantity + qty : m.quantity - qty, id);
-    log(m, type, qty, note);
+    log(m, type, qty, note, req.user);
     db.exec('COMMIT');
   } catch (e) { db.exec('ROLLBACK'); return res.status(500).json({ error: 'Could not update stock.' }); }
   res.json(get(id));

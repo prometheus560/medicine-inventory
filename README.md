@@ -1,4 +1,4 @@
-﻿# Medicine Inventory â€“ Medical-Dental Health Unit (San Carlos Campus)
+# Medicine Inventory - Medical-Dental Health Unit (San Carlos Campus)
 
 Dashboard with full CRUD. **Frontend:** React + Vite + Tailwind CSS. **Backend:** Express.js + SQLite (`node:sqlite`, Node 22.5+).
 

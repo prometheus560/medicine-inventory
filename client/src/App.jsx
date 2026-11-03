@@ -7,14 +7,19 @@ import Dashboard from './Dashboard.jsx';
 import Inventory from './Inventory.jsx';
 import History from './History.jsx';
 import Users from './Users.jsx';
+import Audit from './Audit.jsx';
+import Backup from './Backup.jsx';
 import Login from './Login.jsx';
 
 const PAGES = {
   dashboard: ['Dashboard', 'Monitor stock levels and medicine expiry at a glance.'],
   inventory: ['Inventory', 'Add, edit and track every medicine.'],
   history: ['Stock history', 'Every stock in and stock out, with who recorded it.'],
-  users: ['Users', 'Manage staff accounts and permissions.']
+  users: ['Users', 'Manage staff accounts and permissions.'],
+  activity: ['Activity log', 'Who added, edited or deleted what, and when.'],
+  backup: ['Backup & restore', 'Protect the clinic data and recover it if needed.']
 };
+const ADMIN_ONLY = ['users', 'activity', 'backup'];
 
 const useRoute = () => {
   const get = () => window.location.hash.replace(/^#\/?/, '').split('?')[0] || 'dashboard';
@@ -58,8 +63,8 @@ export default function App() {
 
   const isAdmin = me.role === 'admin';
   const canDelete = me.role !== 'staff';
-  const page = route === 'users' && !isAdmin ? 'dashboard' : PAGES[route] ? route : 'dashboard';
-  const links = [['dashboard', 'Dashboard'], ['inventory', 'Inventory'], ['history', 'Stock history'], ...(isAdmin ? [['users', 'Users']] : [])];
+  const page = ADMIN_ONLY.includes(route) && !isAdmin ? 'dashboard' : PAGES[route] ? route : 'dashboard';
+  const links = [['dashboard', 'Dashboard'], ['inventory', 'Inventory'], ['history', 'Stock history'], ...(isAdmin ? [['users', 'Users'], ['activity', 'Activity log'], ['backup', 'Backup']] : [])];
 
   return (
     <div className="flex min-h-screen bg-[#f3f7fa] text-sm text-slate-900">
@@ -102,6 +107,8 @@ export default function App() {
           {page === 'inventory' && <Inventory meds={meds} admin={canDelete} setModal={setModal} onExport={exportXlsx} />}
           {page === 'history' && <History hist={hist} />}
           {page === 'users' && <Users me={me} notify={notify} />}
+          {page === 'activity' && <Audit />}
+          {page === 'backup' && <Backup notify={notify} />}
         </main>
       </div>
 

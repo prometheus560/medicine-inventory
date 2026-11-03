@@ -60,11 +60,11 @@ export async function exportExcel(meds, hist, status) {
   ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
   const hs = wb.addWorksheet('Stock history', { views: [{ state: 'frozen', ySplit: 1 }] });
-  hs.columns = [22, 28, 12, 10, 36].map(width => ({ width }));
-  head(hs, 1, ['Date', 'Medicine', 'Type', 'Quantity', 'Note']);
+  hs.columns = [22, 28, 12, 10, 28, 14, 22, 14, 28].map(width => ({ width }));
+  head(hs, 1, ['Date', 'Medicine', 'Type', 'Quantity', 'Note', 'By', 'Patient', 'Patient ID', 'Purpose']);
   hist.forEach(t => {
     const when = localAsUtc(new Date(t.created_at.replace(' ', 'T') + 'Z'));
-    const row = hs.addRow([when, t.medicine_name, t.type === 'IN' ? 'Stock in' : 'Stock out', t.quantity, t.note || '']);
+    const row = hs.addRow([when, t.medicine_name, t.type === 'IN' ? 'Stock in' : 'Stock out', t.quantity, t.note || '', t.performed_by || '', t.patient || '', t.patient_id || '', t.purpose || '']);
     row.eachCell({ includeEmpty: true }, c => { c.border = box; });
     row.getCell(1).numFmt = 'dd mmm yyyy hh:mm';
     row.getCell(3).font = { bold: true, color: { argb: t.type === 'IN' ? 'FF047857' : 'FFB91C1C' } };

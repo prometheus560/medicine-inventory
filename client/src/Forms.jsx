@@ -43,11 +43,11 @@ export function MedForm({ med, meds, onClose, onSaved }) {
 
 export function StockForm({ med, onClose, onSaved }) {
   const [type, setType] = useState('OUT');
-  const [quantity, setQuantity] = useState('');
-  const [note, setNote] = useState('');
+  const [f, setF] = useState({ quantity: '', note: '', patient: '', patient_id: '', purpose: '' });
   const [err, setErr] = useState('');
+  const set = k => e => setF({ ...f, [k]: e.target.value });
   const save = async () => {
-    try { await api(`/api/medicines/${med.id}/stock`, send('POST', { type, quantity, note })); onSaved('Stock updated'); }
+    try { await api(`/api/medicines/${med.id}/stock`, send('POST', { type, ...f })); onSaved('Stock updated'); }
     catch (e) { setErr(e.message); }
   };
   return (
@@ -59,8 +59,17 @@ export function StockForm({ med, onClose, onSaved }) {
           <option value="IN">Receive (stock in)</option>
         </select>
       </Field>
-      <Field label="Quantity"><input className={input} type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} /></Field>
-      <Field label="Note (patient, purpose, supplier...)"><input className={input} value={note} onChange={e => setNote(e.target.value)} /></Field>
+      <Field label="Quantity"><input className={input} type="number" min="1" value={f.quantity} onChange={set('quantity')} /></Field>
+      {type === 'OUT' && (
+        <>
+          <Field label="Patient name (for the dispensing record)"><input className={input} value={f.patient} onChange={set('patient')} /></Field>
+          <div className="grid grid-cols-2 gap-x-3">
+            <Field label="Patient ID / reference"><input className={input} value={f.patient_id} onChange={set('patient_id')} /></Field>
+            <Field label="Purpose / diagnosis"><input className={input} value={f.purpose} onChange={set('purpose')} /></Field>
+          </div>
+        </>
+      )}
+      <Field label="Note (optional)"><input className={input} value={f.note} onChange={set('note')} /></Field>
       <Err>{err}</Err>
       <Actions onClose={onClose} onSave={save} label="Save" />
     </Modal>

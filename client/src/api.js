@@ -7,7 +7,6 @@ const real = async (url, opts) => {
   return r.status === 204 ? null : r.json();
 };
 
-/* ---------- Demo mode (GitHub Pages): same API, data kept in the browser ---------- */
 const KEY = 'medstock-react-demo';
 const iso = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 const now = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
